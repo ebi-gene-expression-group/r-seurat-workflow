@@ -28,8 +28,12 @@ if [ "$use_existing_outputs" != 'true' ] && [ "$use_existing_outputs" != 'false'
     usage
 fi
 
+R -e 'remotes::install_github("ebi-gene-expression-group/workflowscriptscommon@feature/seurat_4_io", dependencies=FALSE, )'
+
 test_data_url='https://s3-us-west-2.amazonaws.com/10x.files/samples/cell/pbmc3k/pbmc3k_filtered_gene_bc_matrices.tar.gz'
+test_data_transfer_url='https://www.dropbox.com/s/1zxbn92y5du9pu0/pancreas_v3_files.tar.gz?dl=1'
 test_working_dir=`pwd`/'post_install_tests'
+export test_data_transfer_file=$test_working_dir/pancreas_v3_files.tar.gz
 export test_data_archive=$test_working_dir/`basename $test_data_url`
 
 # Clean up if specified
@@ -41,7 +45,7 @@ if [ "$action" = 'clean' ]; then
 elif [ "$action" != 'test' ]; then
     echo "Invalid action '$action' supplied"
     exit 1
-fi 
+fi
 
 # Initialise directories
 
@@ -53,14 +57,14 @@ mkdir -p $output_dir
 mkdir -p $data_dir
 
 ################################################################################
-# Fetch test data 
+# Fetch test data
 ################################################################################
 
 if [ ! -e "$test_data_archive" ]; then
     wget $test_data_url -P $test_working_dir
-    
+    wget $test_data_transfer_url -O $test_data_transfer_file
 fi
-    
+
 ################################################################################
 # List tool outputs/ inputs
 ################################################################################
@@ -69,6 +73,9 @@ export raw_matrix="$data_dir/matrix.mtx"
 export raw_matrix_object="$output_dir/raw_matrix.rds"
 export raw_seurat_object="$output_dir/raw_seurat.rds"
 export raw_seurat_object_from_tab="$output_dir/raw_seurat_from_tab.rds"
+export transfer_metadata_object="$data_dir/pancreas_metadata.rds"
+export transfer_expression_object="$data_dir/pancreas_expression_matrix.rds"
+export transfer_out_dir="$data_dir/transfer_out"
 export filtered_seurat_object="$output_dir/filtered_seurat.rds"
 export normalised_seurat_object="$output_dir/normalised_seurat.rds"
 export variable_genes_seurat_object="$output_dir/variable_genes_seurat.rds"
@@ -84,7 +91,6 @@ export neighbours_seurat_object="$output_dir/neighbours_seurat.rds"
 export cluster_seurat_object="$output_dir/cluster_seurat.rds"
 export cluster_text_file="$output_dir/clusters.txt"
 export tsne_seurat_object="$output_dir/tsne_seurat.rds"
-export tsne_seurat_object_perplexity="$output_dir/tsne_seurat_perplexity.rds"
 export tsne_embeddings_file="$output_dir/tsne_embeddings.csv"
 export html_output_dir="$output_dir/html_out"
 export marker_text_file="$output_dir/markers.csv"
@@ -133,14 +139,9 @@ export pt_size=1
 export label_size=4
 export do_label='FALSE'
 export group_by='ident'
-export pca_plot_title='Test PCA plot'
 export pca_png_width=1000
 export pca_png_height=1000
-export pca_do_bare='TRUE'
 export pca_cols_use='red,blue,green,yellow,orange,pink,purple,black'
-export pca_coord_fixed='TRUE'
-export pca_no_axes='TRUE'
-export pca_dark_theme='TRUE'
 export pca_plot_order='7,6,5,4,3,2,1,0'
 
 # Find clusters
